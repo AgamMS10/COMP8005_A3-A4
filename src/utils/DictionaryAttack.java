@@ -14,12 +14,14 @@ public class DictionaryAttack {
     
 
     /**
-     * Starts the brute-force attack to find the correct password.
+     * Starts the Dictionary attack to find the correct password.
      *
      * @return The cracked password if found, or null if not found.
      */
     public String startDictionary() {
+        System.out.println("Starting Dictionary Attack...");
         for (String password : passwordList) {
+            // System.out.println("Trying password: " + password); // Uncomment for debugging
             boolean match = passwordHash.compare(password);
             if (match) {
                 return password; // Password cracked

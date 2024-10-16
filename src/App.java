@@ -18,10 +18,10 @@ public class App {
         String username = scanner.nextLine();
         
         // Prompt user for the shadow file path
-        System.out.print("Enter the path to the shadow file (default: /etc/shadow): ");
+        System.out.print("Enter the path to the shadow file (default: src/shadow): ");
         String shadowFilePath = scanner.nextLine();
         if (shadowFilePath.isEmpty()) {
-            shadowFilePath = "/etc/shadow";
+            shadowFilePath = "src/shadow";
         }
         
         // Prompt user for the password list file path
@@ -32,7 +32,7 @@ public class App {
         }
         
         // Close the scanner as it's no longer needed
-        scanner.close();
+
         
         try {
             // Parse the shadow file to get the hashed password and salt
@@ -41,13 +41,14 @@ public class App {
             
             if (entry == null) {
                 System.out.println("Username not found in the shadow file.");
+                scanner.close();
                 return;
             }
             
             // Load the list of common passwords
             PasswordListLoader loader = new PasswordListLoader(passwordListPath);
             List<String> passwordList = loader.loadPasswords();
-            
+            System.out.println("Loaded " + passwordList.size() + " passwords from the list.");
             // Initialize the hash comparer
             HashComparer passwordHash = new HashComparer(entry.getPasswordHash());
             
@@ -60,6 +61,7 @@ public class App {
             
             if (dictionaryPassword != null) {
                 System.out.println("Password cracked In Dictionary! The password is: " + dictionaryPassword);
+                scanner.close();
             } else {
                 System.out.print("Dictionary attack failed. Do you want to start a brute-force attack? (yes/no): ");
                 String response = scanner.nextLine();
@@ -74,6 +76,7 @@ public class App {
                         System.out.println("Failed to crack the password using brute-force.");
                     }
                 }
+                scanner.close();
             }
             
         } catch (Exception e) {

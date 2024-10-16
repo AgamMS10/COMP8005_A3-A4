@@ -1,7 +1,26 @@
 {
-    "java.project.sourcePaths": ["src"],
+    "java.project.sourcePaths": [
+        "src"
+    ],
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
-        "lib/**/*.jar"
+        "lib/libs/commons-codec-1.17.1-javadoc.jar",
+        "lib/libs/commons-codec-1.17.1-sources.jar",
+        "lib/libs/commons-codec-1.17.1-test-sources.jar",
+        "lib/libs/commons-codec-1.17.1-tests.jar",
+        "lib/libs/commons-codec-1.17.1.jar",
+        "lib/libs/commons-lang3-3.17.0.jar",
+        "lib/libs/logback-classic-1.5.11-javadoc.jar",
+        "lib/libs/logback-classic-1.5.11-sources.jar",
+        "lib/libs/logback-classic-1.5.11.jar",
+        "lib/libs/logback-core-1.5.11-javadoc.jar",
+        "lib/libs/logback-core-1.5.11-sources.jar",
+        "lib/libs/logback-core-1.5.11.jar",
+        "lib/libs/password4j-1.8.2-javadoc.jar",
+        "lib/libs/password4j-1.8.2-sources.jar",
+        "lib/libs/password4j-1.8.2.jar",
+        "lib/libs/slf4j-api-2.0.16-javadoc.jar",
+        "lib/libs/slf4j-api-2.0.16-sources.jar",
+        "lib/libs/slf4j-api-2.0.16.jar"
     ]
 }

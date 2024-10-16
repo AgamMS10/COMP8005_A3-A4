@@ -4,8 +4,8 @@ public class BruteForce {
     private HashComparer hashComparer;
 
     // Define the character set to use for brute-force
-    private static final String CHAR_SET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int MAX_PASSWORD_LENGTH = 6; // Adjust as needed
+    private static final String CHAR_SET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ";
+    private static final int MAX_PASSWORD_LENGTH = 10; // Adjust as needed
 
     private String foundPassword = null;
 
@@ -53,7 +53,7 @@ public class BruteForce {
             String candidate = prefix.toString();
             if (hashComparer.compare(candidate)) {
                 foundPassword = candidate;
-                System.out.println("Password found: " + candidate);
+                // System.out.println("Password found: " + candidate); // Uncomment for debugging
             }
             return;
         }
