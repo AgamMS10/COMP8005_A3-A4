@@ -2,9 +2,18 @@ package utils;
 
 public class BruteForce {
     private final HashComparer hashComparer;
-    private static final String CHAR_SET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ ";
+    private static final String CHAR_SET;
     private static final int MAX_PASSWORD_LENGTH = 10; // Adjust as needed
     private String foundPassword = null;
+
+    // Static block to initialize CHAR_SET with all 256 byte values
+    static {
+        StringBuilder sb = new StringBuilder(256);
+        for (int i = 0; i < 256; i++) {
+            sb.append((char) i);
+        }
+        CHAR_SET = sb.toString();
+    }
 
     public BruteForce(HashComparer hashComparer) {
         this.hashComparer = hashComparer;
@@ -23,7 +32,7 @@ public class BruteForce {
         for (int length = 1; length <= MAX_PASSWORD_LENGTH; length++) {
             char[] candidate = new char[length];
             bruteForceIterative(candidate, 0, length);
-            if (foundPassword!= null) break outer;
+            if (foundPassword != null) break outer;
         }
 
         long endTime = System.currentTimeMillis();
@@ -52,7 +61,7 @@ public class BruteForce {
         for (char c : CHAR_SET.toCharArray()) {
             candidate[index] = c;
             bruteForceIterative(candidate, index + 1, length);
-            if (foundPassword!= null) return; // Early exit on success
+            if (foundPassword != null) return; // Early exit on success
         }
     }
 }

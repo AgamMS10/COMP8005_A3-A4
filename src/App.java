@@ -29,6 +29,7 @@ public class App {
             System.out.print("Enter the path to the shadow file (default: src/shadow): ");
             shadowFilePath = scanner.nextLine();
             if (shadowFilePath.isEmpty()) {
+                System.out.println("Using default shadow file path.");
                 shadowFilePath = "src/shadow";
             }
             File shadowFile = new File(shadowFilePath);
@@ -71,6 +72,7 @@ public class App {
             System.out.print("Enter the path to the password list file (default: lib/common_passwords.txt): ");
             passwordListPath = scanner.nextLine();
             if (passwordListPath.isEmpty()) {
+                System.out.println("Using default password list file path.");
                 passwordListPath = "lib/common_passwords.txt";
             }
             File passwordFile = new File(passwordListPath);
