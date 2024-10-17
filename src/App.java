@@ -16,6 +16,11 @@ public class App {
         // Prompt user for the username
         System.out.print("Enter the username to test: ");
         String username = scanner.nextLine();
+        if (username.isEmpty()) {
+            System.out.println("Username cannot be empty.");
+            scanner.close();
+            return;
+        }
         
         // Prompt user for the shadow file path
         System.out.print("Enter the path to the shadow file (default: src/shadow): ");
@@ -75,6 +80,9 @@ public class App {
                     } else {
                         System.out.println("Failed to crack the password using brute-force.");
                     }
+                }
+                else {
+                    System.out.println("Exiting the program.");
                 }
                 scanner.close();
             }
