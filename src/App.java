@@ -9,6 +9,12 @@ import utils.PasswordListLoader;
 import utils.ShadowParser;
 import utils.BruteForce;
 
+// Added imports for graphing
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtils;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 public class App {
     public static void main(String[] args) {
         // Initialize Scanner for user input
@@ -123,6 +129,15 @@ public class App {
                     } else {
                         System.out.println("Failed to crack the password using brute-force.");
                     }
+
+                    // Prompt the user to generate performance graphs
+                    System.out.print("Do you want to see performance graphs comparing different thread counts? (yes/no): ");
+                    String graphResponse = scanner.nextLine();
+                    if (graphResponse.equalsIgnoreCase("yes")) {
+                        runPerformanceTests(passwordHash);
+                    } else {
+                        System.out.println("Exiting the program.");
+                    }
                 } else {
                     System.out.println("Exiting the program.");
                 }
@@ -133,6 +148,56 @@ public class App {
             // e.printStackTrace();
         } finally {
             scanner.close();
+        }
+    }
+
+    // Method to run performance tests and generate graphs
+    private static void runPerformanceTests(HashComparer passwordHash) {
+        System.out.println("Running performance tests...");
+
+        int[] threadCounts = {1, 2, 3, 4};
+        long[] executionTimes = new long[threadCounts.length];
+
+        for (int i = 0; i < threadCounts.length; i++) {
+            int numThreads = threadCounts[i];
+            System.out.println("Testing with " + numThreads + " thread(s)...");
+
+            BruteForce bruteForce = new BruteForce(passwordHash, numThreads);
+
+            long startTime = System.currentTimeMillis();
+            bruteForce.crackPassword();
+            long endTime = System.currentTimeMillis();
+
+            long duration = endTime - startTime;
+            executionTimes[i] = duration;
+
+            // System.out.println("Execution time with " + numThreads + " thread(s): " + duration + " ms"); // Debugging
+        }
+
+        // Generate the graph
+        generatePerformanceGraph(threadCounts, executionTimes);
+    }
+
+    // Method to generate performance graph using JFreeChart
+    private static void generatePerformanceGraph(int[] threadCounts, long[] executionTimes) {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+        for (int i = 0; i < threadCounts.length; i++) {
+            dataset.addValue(executionTimes[i], "Execution Time", threadCounts[i] + " Threads");
+        }
+
+        JFreeChart barChart = ChartFactory.createBarChart(
+                "Brute-Force Performance Comparison",
+                "Number of Threads",
+                "Execution Time (ms)",
+                dataset
+        );
+
+        try {
+            ChartUtils.saveChartAsJPEG(new File("BruteForcePerformance.jpg"), barChart, 800, 600);
+            System.out.println("Performance graph generated: BruteForcePerformance.jpg");
+        } catch (IOException e) {
+            System.err.println("Failed to save the performance graph: " + e.getMessage());
         }
     }
 }

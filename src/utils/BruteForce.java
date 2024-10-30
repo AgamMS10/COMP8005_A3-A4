@@ -9,6 +9,7 @@ public class BruteForce {
     private static final int MAX_PASSWORD_LENGTH = 10; // Adjust as needed
     private volatile String foundPassword = null;
     private final AtomicBoolean passwordFound = new AtomicBoolean(false);
+    private int numThreads;
 
     // Static block to initialize CHAR_SET with all 256 byte values
     static {
@@ -20,6 +21,13 @@ public class BruteForce {
 
     public BruteForce(HashComparer hashComparer) {
         this.hashComparer = hashComparer;
+        this.numThreads = Runtime.getRuntime().availableProcessors();
+    }
+
+    // Overloaded constructor to accept number of threads
+    public BruteForce(HashComparer hashComparer, int numThreads) {
+        this.hashComparer = hashComparer;
+        this.numThreads = numThreads;
     }
 
     /**
@@ -28,10 +36,9 @@ public class BruteForce {
      * @return The cracked password if found, otherwise null.
      */
     public String crackPassword() {
-        System.out.println("Starting brute-force attack...");
+        System.out.println("Starting brute-force attack with " + numThreads + " thread(s)...");
         long startTime = System.currentTimeMillis();
 
-        int numThreads = Runtime.getRuntime().availableProcessors();
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
 
         try {

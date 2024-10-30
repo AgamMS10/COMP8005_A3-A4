@@ -21,6 +21,7 @@
         "lib/libs/password4j-1.8.2.jar",
         "lib/libs/slf4j-api-2.0.16-javadoc.jar",
         "lib/libs/slf4j-api-2.0.16-sources.jar",
-        "lib/libs/slf4j-api-2.0.16.jar"
+        "lib/libs/slf4j-api-2.0.16.jar",
+        "lib/libs/jfreechart-1.5.5.jar",
     ]
 }
