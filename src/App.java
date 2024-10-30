@@ -110,6 +110,7 @@ public class App {
             if (dictionaryPassword != null) {
                 System.out.println("Password cracked via Dictionary attack! The password is: " + dictionaryPassword);
             } else {
+                Thread.sleep(300);
                 System.out.print("Dictionary attack failed. Do you want to start a brute-force attack? (yes/no): ");
                 String response = scanner.nextLine();
                 if (response.equalsIgnoreCase("yes")) {

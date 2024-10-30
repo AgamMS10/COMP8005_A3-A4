@@ -53,7 +53,7 @@ public class HashComparer {
             case "1": // MD5
                 // System.out.println("MD5 Hashing"); // Debugging
                 String md5HashedPassword = Md5Crypt.md5Crypt(attemptedPassword.getBytes(), "$1$" + salt);
-                System.out.println("MD5 Hashed Password: " + md5HashedPassword); // Debugging
+                //System.out.println("MD5 Hashed Password: " + md5HashedPassword); // Debugging
                 return md5HashedPassword.equals(passwordHash);
 
             case "2a": // Blowfish variants (bcrypt)
@@ -63,7 +63,7 @@ public class HashComparer {
                 // For bcrypt, the target hash contains the salt and cost factors
                 // System.out.println("BCrypt Hashing"); // Debugging
                 BcryptFunction bcryptFunction = BcryptFunction.getInstanceFromHash(passwordHash);
-                System.out.println("BCrypt Hashed Password: " + bcryptFunction.hash(attemptedPassword)); // Debugging
+                //System.out.println("BCrypt Hashed Password: " + bcryptFunction.hash(attemptedPassword)); // Debugging
                 // Check the password using the bcryptFunction
                 return Password.check(attemptedPassword, passwordHash).with(bcryptFunction);
             
@@ -71,13 +71,13 @@ public class HashComparer {
             case "5": // SHA-256
                 // System.out.println("SHA-256 Hashing"); // Debugging
                 String sha256HashedPassword = Sha2Crypt.sha256Crypt(attemptedPassword.getBytes(), "$5$" + salt);
-                System.out.println("SHA-256 Hashed Password: " + sha256HashedPassword); // Debugging
+                // System.out.println("SHA-256 Hashed Password: " + sha256HashedPassword); // Debugging
                 return sha256HashedPassword.equals(passwordHash);
 
             case "6": // SHA-512
                 // System.out.println("SHA-512 Hashing"); // Debugging
                 String sha512HashedPassword = Sha2Crypt.sha512Crypt(attemptedPassword.getBytes(), "$6$" + salt);
-                System.out.println("SHA-512 Hashed Password: " + sha512HashedPassword); // Debugging
+                // System.out.println("SHA-512 Hashed Password: " + sha512HashedPassword); // Debugging
                 return sha512HashedPassword.equals(passwordHash);
 
             default:
