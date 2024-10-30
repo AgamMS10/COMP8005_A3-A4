@@ -53,7 +53,7 @@ public class HashComparer {
             case "1": // MD5
                 // System.out.println("MD5 Hashing"); // Debugging
                 String md5HashedPassword = Md5Crypt.md5Crypt(attemptedPassword.getBytes(), "$1$" + salt);
-                //System.out.println("MD5 Hashed Password: " + md5HashedPassword); // Debugging
+                // System.out.println("MD5 Hashed Password: " + md5HashedPassword); // Debugging
                 return md5HashedPassword.equals(passwordHash);
 
             case "2a": // Blowfish variants (bcrypt)
@@ -63,8 +63,7 @@ public class HashComparer {
                 // For bcrypt, the target hash contains the salt and cost factors
                 // System.out.println("BCrypt Hashing"); // Debugging
                 BcryptFunction bcryptFunction = BcryptFunction.getInstanceFromHash(passwordHash);
-                //System.out.println("BCrypt Hashed Password: " + bcryptFunction.hash(attemptedPassword)); // Debugging
-                // Check the password using the bcryptFunction
+                // System.out.println("BCrypt Hashed Password: " + bcryptFunction.hash(attemptedPassword)); // Debugging
                 return Password.check(attemptedPassword, passwordHash).with(bcryptFunction);
             
 

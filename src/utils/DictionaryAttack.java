@@ -40,14 +40,14 @@ public class DictionaryAttack {
             Callable<String> task = () -> {
                 for (String password : sublist) {
                     if (Thread.currentThread().isInterrupted()) {
-                        return null;
+                        throw new InterruptedException("Task was interrupted");
                     }
                     boolean match = passwordHash.compare(password);
                     if (match) {
                         return password;
                     }
                 }
-                return null;
+                throw new Exception("Password not found in this task");
             };
             tasks.add(task);
         }
@@ -62,8 +62,6 @@ public class DictionaryAttack {
             executor.shutdownNow();
         }
 
-        String result = "Dictionary attack failed.";
-
-        return result; // Password not found in the list
+        return null; // Password not found in the list
     }
 }
