@@ -12,7 +12,6 @@ public class DictionaryAttack {
         this.passwordList = passwordList;
         this.passwordHash = passwordHash;
     }
-    
 
     /**
      * Starts the Dictionary attack to find the correct password using multiple threads.
@@ -32,6 +31,7 @@ public class DictionaryAttack {
 
         List<Callable<String>> tasks = new ArrayList<>();
 
+        // Create tasks for each chunk of the password list
         for (int i = 0; i < passwordList.size(); i += chunkSize) {
             int start = i;
             int end = Math.min(i + chunkSize, passwordList.size());
@@ -40,26 +40,39 @@ public class DictionaryAttack {
             Callable<String> task = () -> {
                 for (String password : sublist) {
                     if (Thread.currentThread().isInterrupted()) {
-                        throw new InterruptedException("Task was interrupted");
+                        return null;
                     }
                     boolean match = passwordHash.compare(password);
                     if (match) {
-                        return password;
+                        return password; // Return the password if found
                     }
                 }
-                throw new Exception("Password not found in this task");
+                return null; // Return null if password not found in this sublist
             };
             tasks.add(task);
         }
 
         try {
-            String result = executor.invokeAny(tasks);
-            executor.shutdownNow(); // Cancel all other running tasks
-            return result;
-        } catch (InterruptedException | ExecutionException e) {
+            // Execute all tasks and wait for them to complete
+            List<Future<String>> futures = executor.invokeAll(tasks);
+
+            for (Future<String> future : futures) {
+                try {
+                    String result = future.get();
+                    if (result != null) {
+                        executor.shutdownNow(); // Cancel all other running tasks
+                        return result; // Return the cracked password
+                    }
+                } catch (InterruptedException | ExecutionException e) {
+                    // Handle exceptions from individual tasks
+                    e.printStackTrace();
+                }
+            }
+        } catch (InterruptedException e) {
+            // Handle interruption during invokeAll
             e.printStackTrace();
         } finally {
-            executor.shutdownNow();
+            executor.shutdownNow(); // Ensure the executor is shut down
         }
 
         return null; // Password not found in the list
