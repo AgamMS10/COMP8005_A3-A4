@@ -88,25 +88,29 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
         }
     }
 
+
     @Override
     public synchronized void receiveResult(String workerId, String taskId, String result) throws RemoteException {
+        // Store the result
+        taskResults.put(taskId, result);
+        
+        // If password is found, schedule a separate action to stop all workers
         if (!"Password not found".equals(result)) {
             System.out.println("Received a successful crack from " + workerId + ". Password: " + result);
-            taskResults.put(taskId, result);
-    
-            // Notify all workers to stop
-            for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
-                WorkerInterface worker = entry.getValue();
-                try {
-                    worker.stopTask(taskId);
-                } catch (RemoteException e) {
-                    System.err.println("Failed to notify worker to stop: " + e.getMessage());
+
+            // Don't call stopTask here. Instead, run it in a new thread after we return.
+            new Thread(() -> {
+                for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
+                    try {
+                        entry.getValue().stopTask(taskId);
+                    } catch (RemoteException e) {
+                        System.err.println("Failed to notify worker to stop: " + e.getMessage());
+                    }
                 }
-            }
-        } else {
-            taskResults.put(taskId, result);
+            }).start();
         }
     }
+
     
 
     @Override
