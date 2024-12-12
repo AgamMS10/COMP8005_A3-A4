@@ -5,29 +5,52 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BruteForce {
     private final HashComparer hashComparer;
-    private static final char[] CHAR_SET;
-    private static final int MAX_PASSWORD_LENGTH = 10; // Adjust as needed
+    private final char[] charSet;
+    private final int numThreads;
     private volatile String foundPassword = null;
     private final AtomicBoolean passwordFound = new AtomicBoolean(false);
-    private int numThreads;
+    private static final int MAX_PASSWORD_LENGTH = 10; // Adjust as needed
 
-    // Static block to initialize CHAR_SET with all 256 byte values
+    // Full character set of printable ASCII
+    private static final char[] FULL_CHAR_SET;
     static {
-        CHAR_SET = new char[256];
-        for (int i = 0; i < 256; i++) {
-            CHAR_SET[i] = (char) i;
+        StringBuilder sb = new StringBuilder();
+        for (char c = 32; c <= 126; c++) { // ASCII printable characters
+            sb.append(c);
         }
+        FULL_CHAR_SET = sb.toString().toCharArray();
     }
 
+    /**
+     * Default constructor using the entire character set.
+     */
     public BruteForce(HashComparer hashComparer) {
+        this(hashComparer, 32, 126);
+    }
+
+    /**
+     * Constructor that accepts a character range.
+     *
+     * @param hashComparer the HashComparer instance
+     * @param startChar ASCII start index of char set
+     * @param endChar ASCII end index of char set
+     */
+    public BruteForce(HashComparer hashComparer, int startChar, int endChar) {
         this.hashComparer = hashComparer;
         this.numThreads = Runtime.getRuntime().availableProcessors();
+        this.charSet = createCharSubSet(startChar, endChar);
     }
 
-    // Overloaded constructor to accept number of threads
-    public BruteForce(HashComparer hashComparer, int numThreads) {
-        this.hashComparer = hashComparer;
-        this.numThreads = numThreads;
+    private char[] createCharSubSet(int start, int end) {
+        char[] subset = new char[end - start + 1];
+        for (int i = start; i <= end; i++) {
+            subset[i - start] = (char) i;
+        }
+        return subset;
+    }
+
+    public static char[] getFullCharSet() {
+        return FULL_CHAR_SET;
     }
 
     /**
@@ -36,30 +59,44 @@ public class BruteForce {
      * @return The cracked password if found, otherwise null.
      */
     public String crackPassword() {
-        System.out.println("Starting brute-force attack with " + numThreads + " thread(s)...");
+        System.out.println("Starting brute-force attack with " + numThreads + " thread(s) and chars from '"
+                + (int)charSet[0] + "' to '" + (int)charSet[charSet.length-1] + "'...");
+
         long startTime = System.currentTimeMillis();
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        CompletionService<String> completionService = new ExecutorCompletionService<>(executor);
 
         try {
             for (int length = 1; length <= MAX_PASSWORD_LENGTH; length++) {
                 if (foundPassword != null) break; // Early exit if password is found
 
                 // Generate initial tasks by fixing the first character
-                generateAndSubmitTasks(executor, length);
+                int initialTaskCount = charSet.length;
+                for (char c : charSet) {
+                    if (foundPassword != null) break; // Early exit if password found
+                    char[] candidate = new char[length];
+                    candidate[0] = c;
+                    completionService.submit(new BruteForceTask(candidate, 1, length));
+                }
 
-                // Wait for all tasks at this length to finish or until password is found
-                executor.shutdown();
-                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+                // Wait for all tasks at this length
+                for (int i = 0; i < initialTaskCount; i++) {
+                    if (foundPassword != null) break;
+                    Future<String> future = completionService.take(); // Blocks until a task is completed
+                    String result = future.get();
+                    if (result != null) {
+                        foundPassword = result;
+                        passwordFound.set(true);
+                        break;
+                    }
+                }
 
-                // If password not found, prepare executor for next length
-                if (foundPassword == null) {
-                    executor = Executors.newFixedThreadPool(numThreads);
-                } else {
+                if (foundPassword != null) {
                     break;
                 }
             }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         } finally {
             executor.shutdownNow();
@@ -71,50 +108,42 @@ public class BruteForce {
         return foundPassword;
     }
 
-    private void generateAndSubmitTasks(ExecutorService executor, int length) {
-        for (char c : CHAR_SET) {
-            if (foundPassword != null) break; // Early exit if password is found
-            char[] candidate = new char[length];
-            candidate[0] = c;
-            Runnable task = new BruteForceTask(candidate, 1, length);
-            executor.execute(task);
-        }
-    }
-
-    private class BruteForceTask implements Runnable {
+    private class BruteForceTask implements Callable<String> {
         private final char[] candidate;
         private final int index;
         private final int length;
 
         public BruteForceTask(char[] candidate, int index, int length) {
-            this.candidate = candidate;
+            this.candidate = candidate.clone(); // Clone to prevent shared state
             this.index = index;
             this.length = length;
         }
 
         @Override
-        public void run() {
-            bruteForceIterative(candidate, index, length);
+        public String call() {
+            return bruteForceIterative(candidate, index, length);
         }
 
-        private void bruteForceIterative(char[] candidate, int index, int length) {
-            if (passwordFound.get()) return;
+        private String bruteForceIterative(char[] candidate, int index, int length) {
+            if (passwordFound.get()) return null;
 
             if (index == length) {
                 String attempt = new String(candidate);
                 if (hashComparer.compare(attempt)) {
-                    foundPassword = attempt;
-                    passwordFound.set(true);
-                    // System.out.println("Password found: " + attempt); // Uncomment for debugging
+                    return attempt;
                 }
-                return;
+                return null;
             }
 
-            for (char c : CHAR_SET) {
-                if (passwordFound.get()) return;
+            for (char c : charSet) {
+                if (passwordFound.get()) return null;
                 candidate[index] = c;
-                bruteForceIterative(candidate, index + 1, length);
+                String result = bruteForceIterative(candidate, index + 1, length);
+                if (result != null) {
+                    return result;
+                }
             }
+            return null;
         }
     }
 }
