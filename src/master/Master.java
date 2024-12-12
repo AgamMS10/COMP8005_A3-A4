@@ -30,13 +30,13 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
     }
 
     @Override
-    public synchronized void registerWorker(String workerId, WorkerInterface worker) throws RemoteException {
+    public void registerWorker(String workerId, WorkerInterface worker) throws RemoteException {
         workers.put(workerId, worker);
         System.out.println("Worker registered: " + workerId + ". Total workers: " + workers.size());
     }
 
     @Override
-    public synchronized void assignTask(String taskId, String taskDetails) throws RemoteException {
+    public void assignTask(String taskId, String taskDetails) throws RemoteException {
         System.out.println("Master: Attempting dictionary attack before brute-force...");
 
         // Run dictionary attack locally
@@ -88,21 +88,21 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
         }
     }
 
-
     @Override
-    public synchronized void receiveResult(String workerId, String taskId, String result) throws RemoteException {
-        // Store the result
+    public void receiveResult(String workerId, String taskId, String result) throws RemoteException {
         taskResults.put(taskId, result);
-        
-        // If password is found, schedule a separate action to stop all workers
         if (!"Password not found".equals(result)) {
             System.out.println("Received a successful crack from " + workerId + ". Password: " + result);
 
-            // Don't call stopTask here. Instead, run it in a new thread after we return.
+            // Schedule stopping tasks in a separate thread after returning from this method
             new Thread(() -> {
+                try {
+                    Thread.sleep(100); // small delay to ensure receiveResult returns
+                } catch (InterruptedException ignored) {}
                 for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
+                    WorkerInterface worker = entry.getValue();
                     try {
-                        entry.getValue().stopTask(taskId);
+                        worker.stopTask(taskId);
                     } catch (RemoteException e) {
                         System.err.println("Failed to notify worker to stop: " + e.getMessage());
                     }
@@ -111,10 +111,8 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
         }
     }
 
-    
-
     @Override
-    public synchronized String getResult(String taskId) throws RemoteException {
+    public String getResult(String taskId) throws RemoteException {
         return taskResults.get(taskId);
     }
 
