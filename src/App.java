@@ -12,7 +12,7 @@ public class App {
 
         try {
             // Connect to the master
-            String masterHost = "192.168.1.74"; // Adjust if needed
+            String masterHost = "192.168.0.163"; // Adjust if needed
             Registry registry = LocateRegistry.getRegistry(masterHost, 1099);
             MasterInterface master = (MasterInterface) registry.lookup("Master");
             System.out.println("Connected to master at " + masterHost + ":1099");
