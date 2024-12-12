@@ -90,24 +90,30 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
 
     @Override
     public synchronized void receiveResult(String workerId, String taskId, String result) throws RemoteException {
+        // Store the result immediately
+        taskResults.put(taskId, result);
+        
         if (!"Password not found".equals(result)) {
             System.out.println("Received a successful crack from " + workerId + ". Password: " + result);
-            taskResults.put(taskId, result);
-    
-            // Notify all workers to stop
-            for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
-                WorkerInterface worker = entry.getValue();
-                try {
-                    worker.stopTask(taskId);
-                } catch (RemoteException e) {
-                    System.err.println("Failed to notify worker to stop: " + e.getMessage());
-                }
+
+            // Instead of calling stopTask() here (which causes a deadlock),
+            // schedule the stop calls to happen after this method returns.
+            new Thread(() -> notifyWorkersToStop(taskId)).start();
+        } 
+        // If result is "Password not found", we just store it (already done above).
+    }
+
+    // This method is called in a separate thread after receiveResult returns
+    private void notifyWorkersToStop(String taskId) {
+        for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
+            WorkerInterface worker = entry.getValue();
+            try {
+                worker.stopTask(taskId);
+            } catch (RemoteException e) {
+                System.err.println("Failed to notify worker to stop: " + e.getMessage());
             }
-        } else {
-            taskResults.put(taskId, result);
         }
     }
-    
 
     @Override
     public synchronized String getResult(String taskId) throws RemoteException {
@@ -118,7 +124,7 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
         int port = 1099; // Specify the port number
         String masterIp = "192.168.1.74"; // Replace with your desired IP or hostname
 
-        try {   
+        try {
             System.setProperty("java.rmi.server.hostname", masterIp);
 
             Registry registry = LocateRegistry.createRegistry(port);
