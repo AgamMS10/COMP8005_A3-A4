@@ -103,7 +103,7 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
 
     public static void main(String[] args) {
         int port = 1099; // Specify the port number
-        String masterIp = "192.168.1.100"; // Replace with your desired IP or hostname
+        String masterIp = "192.168.1.74"; // Replace with your desired IP or hostname
 
         try {   
             System.setProperty("java.rmi.server.hostname", masterIp);
