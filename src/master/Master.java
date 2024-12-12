@@ -80,8 +80,8 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
             String subTaskDetails = taskDetails + "|" + startChar + ":" + endChar;
 
             try {
-                w.executeTask(taskId, subTaskDetails);
                 System.out.println("Task " + taskId + " assigned to worker " + workerId + " with range " + startChar + "-" + endChar);
+                w.executeTask(taskId, subTaskDetails);
             } catch (RemoteException e) {
                 System.err.println("Failed to assign task to worker " + workerId + ": " + e.getMessage());
             }
