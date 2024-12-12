@@ -11,7 +11,7 @@ import utils.BruteForce;
 import utils.HashComparer;
 
 public class Worker extends UnicastRemoteObject implements WorkerInterface {
-
+    private volatile boolean stopFlag = false;
     private final String workerId;
     private MasterInterface master;
 
@@ -22,26 +22,30 @@ public class Worker extends UnicastRemoteObject implements WorkerInterface {
 
     @Override
     public void executeTask(String taskId, String taskDetails) throws RemoteException {
+        stopFlag = false; // Reset the flag for new task
         System.out.println("Worker " + workerId + " received task " + taskId + ": " + taskDetails);
-
-        // taskDetails might look like: "HASH|startChar:endChar"
+    
         String[] parts = taskDetails.split("\\|");
         String hash = parts[0];
         int startChar = 32;
         int endChar = 126;
-
+    
         if (parts.length > 1) {
             String rangePart = parts[1];
             String[] range = rangePart.split(":");
             startChar = Integer.parseInt(range[0]);
             endChar = Integer.parseInt(range[1]);
         }
-
+    
         HashComparer hashComparer = new HashComparer(hash);
         BruteForce bruteForce = new BruteForce(hashComparer, startChar, endChar);
-        String crackedPassword = bruteForce.crackPassword();
-
-        if (crackedPassword != null) {
+    
+        String crackedPassword = null;
+        while (!stopFlag && (crackedPassword = bruteForce.crackPassword()) == null) {
+            // Keep trying unless stopFlag is set
+        }
+    
+        if (!stopFlag && crackedPassword != null) {
             master.receiveResult(workerId, taskId, crackedPassword);
         } else {
             master.receiveResult(workerId, taskId, "Password not found");
@@ -59,6 +63,12 @@ public class Worker extends UnicastRemoteObject implements WorkerInterface {
             e.printStackTrace();
         }
     }
+    @Override
+    public void stopTask(String taskId) throws RemoteException {
+        System.out.println("Worker " + workerId + " received stop signal for task " + taskId);
+        stopFlag = true;
+    }
+
 
     public static void main(String[] args) {
         if (args.length < 2) {

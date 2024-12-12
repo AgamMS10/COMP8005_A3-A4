@@ -91,10 +91,23 @@ public class Master extends UnicastRemoteObject implements MasterInterface {
     @Override
     public synchronized void receiveResult(String workerId, String taskId, String result) throws RemoteException {
         if (!"Password not found".equals(result)) {
-            System.out.println("Received a successful crack from " + workerId);
+            System.out.println("Received a successful crack from " + workerId + ". Password: " + result);
+            taskResults.put(taskId, result);
+    
+            // Notify all workers to stop
+            for (Map.Entry<String, WorkerInterface> entry : workers.entrySet()) {
+                WorkerInterface worker = entry.getValue();
+                try {
+                    worker.stopTask(taskId);
+                } catch (RemoteException e) {
+                    System.err.println("Failed to notify worker to stop: " + e.getMessage());
+                }
+            }
+        } else {
+            taskResults.put(taskId, result);
         }
-        taskResults.put(taskId, result);
     }
+    
 
     @Override
     public synchronized String getResult(String taskId) throws RemoteException {
