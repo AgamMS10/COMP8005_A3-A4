@@ -69,20 +69,20 @@ public class BruteForce {
 
         try {
             for (int length = 1; length <= MAX_PASSWORD_LENGTH; length++) {
-                if (foundPassword != null) break; // Early exit if password is found
-
+                if (passwordFound.get()) break; // Early exit if password is found
+        
                 // Generate initial tasks by fixing the first character
                 int initialTaskCount = charSet.length;
                 for (char c : charSet) {
-                    if (foundPassword != null) break; // Early exit if password found
+                    if (passwordFound.get()) break; // Early exit if password is found
                     char[] candidate = new char[length];
                     candidate[0] = c;
                     completionService.submit(new BruteForceTask(candidate, 1, length));
                 }
-
+        
                 // Wait for all tasks at this length
                 for (int i = 0; i < initialTaskCount; i++) {
-                    if (foundPassword != null) break;
+                    if (passwordFound.get()) break; // Break waiting if password found
                     Future<String> future = completionService.take(); // Blocks until a task is completed
                     String result = future.get();
                     if (result != null) {
@@ -91,16 +91,14 @@ public class BruteForce {
                         break;
                     }
                 }
-
-                if (foundPassword != null) {
-                    break;
-                }
+        
+                if (passwordFound.get()) break; // Double-check and exit early
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         } finally {
-            executor.shutdownNow();
-        }
+            executor.shutdownNow(); // Force stop all remaining threads
+        }        
 
         long endTime = System.currentTimeMillis();
         System.out.println("Brute-force attack completed in " + (endTime - startTime) / 1000 + " seconds.");
@@ -125,18 +123,19 @@ public class BruteForce {
         }
 
         private String bruteForceIterative(char[] candidate, int index, int length) {
-            if (passwordFound.get()) return null;
-
+            if (passwordFound.get()) return null; // Exit if password is already found
+        
             if (index == length) {
                 String attempt = new String(candidate);
                 if (hashComparer.compare(attempt)) {
+                    passwordFound.set(true); // Signal that password is found
                     return attempt;
                 }
                 return null;
             }
-
+        
             for (char c : charSet) {
-                if (passwordFound.get()) return null;
+                if (passwordFound.get()) return null; // Exit if password is already found
                 candidate[index] = c;
                 String result = bruteForceIterative(candidate, index + 1, length);
                 if (result != null) {
@@ -145,5 +144,10 @@ public class BruteForce {
             }
             return null;
         }
+        
     }
+    public boolean isPasswordFound() {
+        return passwordFound.get();
+    }
+    
 }

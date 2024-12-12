@@ -11,7 +11,7 @@ import utils.BruteForce;
 import utils.HashComparer;
 
 public class Worker extends UnicastRemoteObject implements WorkerInterface {
-    private volatile boolean stopFlag = false;
+    private volatile boolean stopFlag = "false".equals(System.getProperty("worker.stopFlag"));
     private final String workerId;
     private MasterInterface master;
 
@@ -22,7 +22,7 @@ public class Worker extends UnicastRemoteObject implements WorkerInterface {
 
     @Override
     public void executeTask(String taskId, String taskDetails) throws RemoteException {
-        stopFlag = false; // Reset the flag for new task
+        stopFlag = false; // Reset the stop flag for new tasks
         System.out.println("Worker " + workerId + " received task " + taskId + ": " + taskDetails);
     
         String[] parts = taskDetails.split("\\|");
@@ -40,17 +40,14 @@ public class Worker extends UnicastRemoteObject implements WorkerInterface {
         HashComparer hashComparer = new HashComparer(hash);
         BruteForce bruteForce = new BruteForce(hashComparer, startChar, endChar);
     
-        String crackedPassword = null;
-        while (!stopFlag && (crackedPassword = bruteForce.crackPassword()) == null) {
-            // Keep trying unless stopFlag is set
-        }
-    
-        if (!stopFlag && crackedPassword != null) {
+        String crackedPassword = bruteForce.crackPassword();
+        if (bruteForce.isPasswordFound() && crackedPassword != null) {
             master.receiveResult(workerId, taskId, crackedPassword);
         } else {
             master.receiveResult(workerId, taskId, "Password not found");
         }
     }
+    
 
     public void registerWithMaster(String masterHost) {
         try {
